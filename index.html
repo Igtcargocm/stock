@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>IGT Cargo · Stock</title>
 <link rel="preconnect" href="https://unpkg.com">
 <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
@@ -26,7 +25,6 @@
   .nav-tabs a{color:#fff; text-decoration:none; font-weight:700; padding:8px 14px; border-radius:999px; opacity:.85}
   .nav-tabs a:hover{opacity:1; background:rgba(255,255,255,.12)}
   .nav-tabs a.active{background:#fff; color:var(--primary-600)}
-  .admin-state{margin-left:8px; font-size:12px; background:rgba(255,255,255,.15); padding:4px 10px; border-radius:999px}
 
   /* HEAD + CARDS */
   header{ text-align:center; margin:16px 0 10px;}
@@ -57,8 +55,6 @@
   .small{font-size:13px;color:var(--muted)}
   .hidden{display:none}
   .section-title{display:flex; justify-content:space-between; align-items:center; gap:12px; margin:0 0 8px}
-
-  /* tiny helpers */
   .pill{display:inline-block; padding:4px 10px; background:#e9f1ff; color:var(--primary-600); border-radius:999px; font-weight:700; font-size:12px}
 </style>
 </head>
@@ -73,7 +69,6 @@
       <div class="nav-tabs">
         <a href="#" id="tab-comercial" class="active" aria-current="page">Comercial</a>
         <a href="#" id="tab-admin">Admin</a>
-        <span class="admin-state" id="admin-state">Admin: bloqueado</span>
       </div>
     </div>
   </nav>
@@ -96,7 +91,7 @@
             <div>
               <label for="f_commercial">Comercial</label>
               <select id="f_commercial" required></select>
-              <div class="small">Elegí tu nombre.</div>
+              <div class="small">Elegí tu nombre (se carga desde “Admin → Comerciales”).</div>
             </div>
             <div>
               <label for="f_client">Cliente</label>
@@ -115,7 +110,6 @@
             <div class="center">
               <div class="actions" style="width:100%">
                 <button type="submit">Registrar entrega</button>
-                <button type="button" class="ghost" id="btn-refresh">Actualizar datos</button>
               </div>
             </div>
           </div>
@@ -130,14 +124,7 @@
           <tbody></tbody>
         </table>
       </div>
-
-      <div class="card">
-        <h2 style="margin-top:0">Últimos movimientos</h2>
-        <table id="tbl-movs">
-          <thead><tr><th>Fecha</th><th>Comercial</th><th>Cliente</th><th>Regalo</th><th>Cantidad</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
+      <!-- (Movimientos ahora solo en Admin) -->
     </section>
 
     <!-- ADMIN -->
@@ -169,12 +156,8 @@
 
       <!-- CONTENIDO ADMIN -->
       <div id="admin-content" class="hidden">
-        <!-- barra estado -->
         <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <span class="pill">Admin activo</span>
-            <span class="small" style="margin-left:8px">Gestiona comerciales, regalos y límites.</span>
-          </div>
+          <div><span class="pill">Admin activo</span> <span class="small" style="margin-left:8px">Gestiona comerciales, regalos, límites y ve movimientos.</span></div>
           <button id="btn-logout" class="ghost">Salir</button>
         </div>
 
@@ -182,28 +165,23 @@
         <div class="card">
           <div class="section-title">
             <h2 style="margin:0">Comerciales</h2>
-            <span class="small">Agregar/Eliminar comerciales. También podés fijar límite diario.</span>
+            <span class="small">Agregar/eliminar comerciales. Podés fijar límite diario por regalo en la sección de abajo.</span>
           </div>
           <form id="form-add-commercial" class="grid-3">
             <div>
               <label for="a_commercial_name">Nombre del comercial</label>
               <input id="a_commercial_name" placeholder="Ej: Juan Pérez" required />
             </div>
-            <div>
-              <label for="a_commercial_limit">Límite diario (opcional)</label>
-              <input id="a_commercial_limit" type="number" min="1" step="1" placeholder="Ej: 20" />
-            </div>
             <div class="center">
               <div class="actions" style="width:100%">
                 <button type="submit">Guardar</button>
-                <button type="button" class="ghost" id="btn-refresh-com">Actualizar</button>
               </div>
             </div>
           </form>
 
           <div style="margin-top:10px">
             <table id="tbl-commercials">
-              <thead><tr><th>Comercial</th><th>Límite diario</th><th style="width:180px">Acciones</th></tr></thead>
+              <thead><tr><th>Comercial</th><th style="width:160px">Acciones</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -214,7 +192,7 @@
         <div class="card">
           <div class="section-title">
             <h2 style="margin:0">Regalos y stock</h2>
-            <span class="small">Crear regalos, ajustar stock o eliminar (si no tienen movimientos).</span>
+            <span class="small">Crear regalos, ajustar stock o eliminar (los movimientos quedan).</span>
           </div>
           <form id="form-add-gift" class="grid-3">
             <div>
@@ -228,7 +206,6 @@
             <div class="center">
               <div class="actions" style="width:100%">
                 <button type="submit">Guardar regalo</button>
-                <button type="button" class="ghost" id="btn-refresh-gift">Actualizar</button>
               </div>
             </div>
           </form>
@@ -240,6 +217,48 @@
             </table>
           </div>
           <div id="msg-admin-gift" class="msg"></div>
+        </div>
+
+        <!-- Límites por regalo -->
+        <div class="card">
+          <div class="section-title">
+            <h2 style="margin:0">Límites por regalo</h2>
+            <span class="small">Define un límite diario por Comercial y por Regalo.</span>
+          </div>
+          <form id="form-limit" class="grid-3">
+            <div>
+              <label for="l_commercial">Comercial</label>
+              <select id="l_commercial" required></select>
+            </div>
+            <div>
+              <label for="l_gift">Regalo</label>
+              <select id="l_gift" required></select>
+            </div>
+            <div>
+              <label for="l_limit">Límite diario</label>
+              <input id="l_limit" type="number" min="1" step="1" placeholder="Ej: 20" required />
+              <div class="actions" style="margin-top:10px">
+                <button type="submit">Guardar límite</button>
+                <button type="button" class="ghost" id="btn-clear-limit">Quitar límite</button>
+              </div>
+            </div>
+          </form>
+          <div style="margin-top:10px">
+            <table id="tbl-limits">
+              <thead><tr><th>Comercial</th><th>Regalo</th><th>Límite diario</th><th style="width:120px">Eliminar</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="msg-limit" class="msg"></div>
+        </div>
+
+        <!-- Movimientos (solo Admin) -->
+        <div class="card">
+          <h2 style="margin-top:0">Últimos movimientos</h2>
+          <table id="tbl-movs">
+            <thead><tr><th>Fecha</th><th>Comercial</th><th>Cliente</th><th>Regalo</th><th>Cantidad</th></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -278,11 +297,9 @@ function showAdmin(){
   if(!adminLogged){
     $('#admin-login').classList.remove('hidden');
     $('#admin-content').classList.add('hidden');
-    $('#admin-state').textContent = "Admin: bloqueado";
   } else {
     $('#admin-login').classList.add('hidden');
     $('#admin-content').classList.remove('hidden');
-    $('#admin-state').textContent = "Admin: activo";
   }
 }
 
@@ -309,13 +326,16 @@ $('#btn-logout').addEventListener('click', ()=>{
   showAdmin();
 });
 
-// ======== COMERCIAL: cargar selects, stock, movimientos ========
+// ======== Carga de datos ========
 async function loadGifts(){
   const { data, error } = await sb.from('gifts').select('id,name,stock').order('name');
   if(error) { console.error(error); return; }
-  // select de Comercial
+  // select (Comercial)
   const sel = $('#f_gift');
   sel.innerHTML = data.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+  // select (Límites)
+  const selL = $('#l_gift');
+  selL.innerHTML = data.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
   // tabla stock (Comercial)
   const tb = $('#tbl-stock tbody');
   tb.innerHTML = data.map(g => `<tr><td>${g.name}</td><td>${g.stock}</td></tr>`).join('');
@@ -334,109 +354,124 @@ async function loadGifts(){
       <td><button type="button" class="warn btn-del-gift" data-gid="${g.id}">Eliminar</button></td>
     </tr>
   `).join('');
-  // wire up acciones admin
+  // acciones admin
   $$('.btn-set-stock').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!adminLogged){ toast($('#msg-admin-gift'), 'Solo Admin', false); return; }
       const gid = parseInt(btn.dataset.gid,10);
       const val = parseInt((document.getElementById('set_'+gid).value||'').trim(),10);
       if(Number.isNaN(val) || val < 0){ toast($('#msg-admin-gift'),'Stock inválido', false); return; }
-      const { data, error } = await sb.rpc('set_gift_stock', { p_gift_id: gid, p_stock: val });
+      const { error } = await sb.rpc('set_gift_stock', { p_gift_id: gid, p_stock: val });
       if(error){ console.error(error); toast($('#msg-admin-gift'), error.message || 'No se pudo actualizar', false); return; }
       toast($('#msg-admin-gift'), 'Stock actualizado');
-      await loadGifts();
+      await Promise.all([loadGifts(), loadMovementsAdmin()]);
     });
   });
   $$('.btn-del-gift').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!adminLogged){ toast($('#msg-admin-gift'), 'Solo Admin', false); return; }
       const gid = parseInt(btn.dataset.gid,10);
-      if(!confirm('¿Eliminar este regalo? Solo si no tiene movimientos.')) return;
+      if(!confirm('¿Eliminar este regalo? Los movimientos quedarán como histórico.')) return;
       const { error } = await sb.rpc('delete_gift', { p_id: gid });
       if(error){ console.error(error); toast($('#msg-admin-gift'), error.message || 'No se pudo eliminar', false); return; }
       toast($('#msg-admin-gift'), 'Regalo eliminado');
-      await loadGifts();
+      await Promise.all([loadGifts(), loadLimits(), loadMovementsAdmin()]);
     });
   });
 }
 
 async function loadCommercials(){
-  const { data, error } = await sb
-    .from('commercials')
-    .select('id,name, commercial_limits(daily_limit)')
-    .order('name');
+  const { data, error } = await sb.from('commercials').select('id,name').order('name');
   if(error) { console.error(error); return; }
-
-  // selector Comercial
+  // selector Comercial (Comercial)
   const sel = $('#f_commercial');
   sel.innerHTML = data.map(c => `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`).join('');
+  // selector Límites (Admin)
+  const selL = $('#l_commercial');
+  selL.innerHTML = data.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   // tabla Admin
   const tb = $('#tbl-commercials tbody');
   tb.innerHTML = data.map(c => `
     <tr>
       <td>${c.name}</td>
-      <td>${c.commercial_limits?.[0]?.daily_limit ?? '-'}</td>
       <td>
         <div class="actions">
-          <input type="number" min="1" step="1" id="lim_${c.id}" placeholder="Nuevo límite" style="max-width:120px">
-          <button type="button" class="btn-set-limit" data-cid="${c.id}">Aplicar</button>
           <button type="button" class="warn btn-del-commercial" data-cid="${c.id}">Eliminar</button>
         </div>
       </td>
     </tr>
   `).join('');
-
-  // wire admin acciones
-  $$('.btn-set-limit').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      if(!adminLogged){ toast($('#msg-admin-com'), 'Solo Admin', false); return; }
-      const cid = parseInt(btn.dataset.cid,10);
-      const valStr = (document.getElementById('lim_'+cid).value||'').trim();
-      const val = valStr === '' ? null : parseInt(valStr,10);
-      if(val !== null && (Number.isNaN(val) || val <= 0)){ toast($('#msg-admin-com'),'Límite inválido', false); return; }
-      const { error } = await sb.rpc('set_commercial_limit', { p_commercial_id: cid, p_daily_limit: val });
-      if(error){ console.error(error); toast($('#msg-admin-com'), error.message || 'No se pudo aplicar', false); return; }
-      toast($('#msg-admin-com'),'Límite actualizado');
-      await loadCommercials();
-    });
-  });
-
+  // eliminar comercial
   $$('.btn-del-commercial').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       if(!adminLogged){ toast($('#msg-admin-com'), 'Solo Admin', false); return; }
       const cid = parseInt(btn.dataset.cid,10);
-      if(!confirm('¿Eliminar comercial? Solo si no tiene movimientos.')) return;
+      if(!confirm('¿Eliminar comercial? Los movimientos quedarán como histórico.')) return;
       const { error } = await sb.rpc('delete_commercial', { p_id: cid });
       if(error){ console.error(error); toast($('#msg-admin-com'), error.message || 'No se pudo eliminar', false); return; }
       toast($('#msg-admin-com'),'Comercial eliminado');
-      await Promise.all([loadCommercials(), loadMovements()]);
+      await Promise.all([loadCommercials(), loadLimits(), loadMovementsAdmin()]);
     });
   });
 }
 
-async function loadMovements(limit=20){
+async function loadLimits(){
+  // lista de límites con nombres
+  const { data, error } = await sb
+    .from('commercial_gift_limits')
+    .select('commercial_id, gift_id, daily_limit, commercials(name), gifts(name)')
+    .order('commercial_id', { ascending: true });
+  if(error){ console.error(error); return; }
+  const tb = $('#tbl-limits tbody');
+  tb.innerHTML = (data||[]).map(r => `
+    <tr>
+      <td>${r.commercials?.name ?? r.commercial_id}</td>
+      <td>${r.gifts?.name ?? r.gift_id}</td>
+      <td>${r.daily_limit}</td>
+      <td><button type="button" class="warn btn-del-limit" data-cid="${r.commercial_id}" data-gid="${r.gift_id}">Eliminar</button></td>
+    </tr>
+  `).join('');
+  $$('.btn-del-limit').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!adminLogged){ toast($('#msg-limit'), 'Solo Admin', false); return; }
+      const cid = parseInt(btn.dataset.cid,10);
+      const gid = parseInt(btn.dataset.gid,10);
+      const { error } = await sb.rpc('set_commercial_gift_limit', { p_commercial_id: cid, p_gift_id: gid, p_daily_limit: null });
+      if(error){ console.error(error); toast($('#msg-limit'), error.message || 'No se pudo eliminar', false); return; }
+      toast($('#msg-limit'), 'Límite eliminado');
+      await loadLimits();
+    });
+  });
+}
+
+async function loadMovementsAdmin(limit=50){
   const { data, error } = await sb
     .from('movements')
-    .select('created_at, qty, gifts(name), clients(name), commercials(name)')
+    .select('created_at, qty, commercial_name, client_name, gift_name, commercials(name), clients(name), gifts(name)')
     .order('created_at', { ascending:false })
     .limit(limit);
   if(error){ console.error(error); return; }
   const tb = $('#tbl-movs tbody');
-  tb.innerHTML = (data||[]).map(m => `
-    <tr>
-      <td>${new Date(m.created_at).toLocaleString()}</td>
-      <td>${m.commercials?.name ?? ''}</td>
-      <td>${m.clients?.name ?? ''}</td>
-      <td>${m.gifts?.name ?? ''}</td>
-      <td>${m.qty}</td>
-    </tr>
-  `).join('');
+  tb.innerHTML = (data||[]).map(m => {
+    const comm = m.commercial_name || m.commercials?.name || '';
+    const cli  = m.client_name     || m.clients?.name     || '';
+    const gif  = m.gift_name       || m.gifts?.name       || '';
+    return `
+      <tr>
+        <td>${new Date(m.created_at).toLocaleString()}</td>
+        <td>${comm}</td>
+        <td>${cli}</td>
+        <td>${gif}</td>
+        <td>${m.qty}</td>
+      </tr>
+    `;
+  }).join('');
 }
 
 // ======== COMERCIAL: registrar movimiento ========
 $('#form-movement').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const commercialName = $('#f_commercial').selectedOptions[0]?.dataset?.name || '';
+  const commercialName = $('#f_commercial').selectedOptions[0]?.dataset?.name || $('#f_commercial').selectedOptions[0]?.textContent || '';
   const client = $('#f_client').value.trim();
   const giftId = parseInt($('#f_gift').value,10);
   const qty = parseInt($('#f_qty').value,10);
@@ -452,30 +487,19 @@ $('#form-movement').addEventListener('submit', async (e)=>{
   if(error){ console.error(error); toast($('#msg-mov'), error.message || 'Error al registrar', false); return; }
   toast($('#msg-mov'), 'Entrega registrada');
   $('#f_client').value=''; $('#f_qty').value='1';
-  await Promise.all([loadGifts(), loadMovements()]);
+  await Promise.all([loadGifts(), loadMovementsAdmin()]);
 });
 
-// ======== ADMIN: upserts ========
+// ======== ADMIN: upserts y límites ========
 $('#form-add-commercial').addEventListener('submit', async (e)=>{
   e.preventDefault();
   if(!adminLogged){ toast($('#msg-admin-com'),'Solo Admin', false); return; }
   const name = $('#a_commercial_name').value.trim();
-  const limitStr = $('#a_commercial_limit').value.trim();
-  const limitVal = limitStr === '' ? null : parseInt(limitStr,10);
   if(!name){ toast($('#msg-admin-com'),'Ingresá un nombre', false); return; }
-  if(limitVal !== null && (Number.isNaN(limitVal) || limitVal <= 0)){ toast($('#msg-admin-com'),'Límite inválido', false); return; }
-
-  // upsert comercial
-  const { data: idData, error: upErr } = await sb.rpc('upsert_commercial', { p_name: name });
-  if(upErr){ console.error(upErr); toast($('#msg-admin-com'), upErr.message || 'Error guardando', false); return; }
-
-  // set límite (si corresponde)
-  if(limitVal !== null){
-    const { error: limErr } = await sb.rpc('set_commercial_limit', { p_commercial_id: idData, p_daily_limit: limitVal });
-    if(limErr){ console.error(limErr); toast($('#msg-admin-com'), limErr.message || 'No se pudo aplicar el límite', false); }
-  }
+  const { error } = await sb.rpc('upsert_commercial', { p_name: name });
+  if(error){ console.error(error); toast($('#msg-admin-com'), error.message || 'Error guardando', false); return; }
   toast($('#msg-admin-com'), 'Comercial guardado');
-  $('#a_commercial_name').value=''; $('#a_commercial_limit').value='';
+  $('#a_commercial_name').value='';
   await loadCommercials();
 });
 
@@ -494,14 +518,33 @@ $('#form-add-gift').addEventListener('submit', async (e)=>{
   await loadGifts();
 });
 
-// botones refresh
-$('#btn-refresh').addEventListener('click', async ()=>{ await Promise.all([loadGifts(), loadCommercials(), loadMovements()]); });
-$('#btn-refresh-com').addEventListener('click', async ()=>{ await loadCommercials(); });
-$('#btn-refresh-gift').addEventListener('click', async ()=>{ await loadGifts(); });
+// guardar límite
+$('#form-limit').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  if(!adminLogged){ toast($('#msg-limit'),'Solo Admin', false); return; }
+  const cid = parseInt($('#l_commercial').value,10);
+  const gid = parseInt($('#l_gift').value,10);
+  const lim = parseInt($('#l_limit').value,10);
+  if(!cid || !gid || !lim || lim<=0){ toast($('#msg-limit'),'Datos inválidos', false); return; }
+  const { error } = await sb.rpc('set_commercial_gift_limit', { p_commercial_id: cid, p_gift_id: gid, p_daily_limit: lim });
+  if(error){ console.error(error); toast($('#msg-limit'), error.message || 'No se pudo guardar', false); return; }
+  toast($('#msg-limit'), 'Límite guardado');
+  await loadLimits();
+});
+$('#btn-clear-limit').addEventListener('click', async ()=>{
+  if(!adminLogged){ toast($('#msg-limit'),'Solo Admin', false); return; }
+  const cid = parseInt($('#l_commercial').value,10);
+  const gid = parseInt($('#l_gift').value,10);
+  const { error } = await sb.rpc('set_commercial_gift_limit', { p_commercial_id: cid, p_gift_id: gid, p_daily_limit: null });
+  if(error){ console.error(error); toast($('#msg-limit'), error.message || 'No se pudo eliminar', false); return; }
+  toast($('#msg-limit'), 'Límite eliminado');
+  await loadLimits();
+});
 
 // ======== INIT ========
 (async function init(){
-  await Promise.all([loadGifts(), loadCommercials(), loadMovements()]);
+  await Promise.all([loadGifts(), loadCommercials()]);
+  await Promise.all([loadLimits(), loadMovementsAdmin()]);
 })();
 </script>
 </body>
