@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Stock de Regalos</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:24px;max-width:960px}
+    h1{margin-top:0}
+    form, .card{border:1px solid #ddd; padding:16px; border-radius:12px; margin:16px 0; box-shadow:0 2px 6px rgba(0,0,0,.05)}
+    label{display:block; font-weight:600; margin:8px 0 4px}
+    input, select, button{width:100%; padding:10px; border:1px solid #ccc; border-radius:10px; box-sizing:border-box}
+    button{cursor:pointer; font-weight:700}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
+    table{width:100%; border-collapse:collapse}
+    th, td{border-bottom:1px solid #eee; padding:8px; text-align:left}
+    .ok{color:#0a7a42; font-weight:700}
+    .err{color:#b00020; font-weight:700}
+    .small{font-size:.9em; color:#555}
+  </style>
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+</head>
+<body>
+  <h1>Stock de Regalos</h1>
+
+  <div class="card">
+    <div class="small">Completá el formulario para registrar una entrega. El stock se descuenta en forma automática.</div>
+    <form id="gift-form">
+      <div class="row3">
+        <div>
+          <label for="commercial">Comercial</label>
+          <input id="commercial" name="commercial" placeholder="Nombre del comercial" required />
+        </div>
+        <div>
+          <label for="client">Cliente</label>
+          <input id="client" name="client" placeholder="Nombre del cliente" required />
+        </div>
+        <div>
+          <label for="gift">Regalo</label>
+          <select id="gift" name="gift" required></select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="qty">Cantidad</label>
+          <input id="qty" name="qty" type="number" min="1" step="1" value="1" required />
+        </div>
+        <div style="align-self:end">
+          <button type="submit">Registrar entrega</button>
+        </div>
+      </div>
+      <div id="msg" class="small"></div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Stock</h2>
+    <table id="stock-table">
+      <thead><tr><th>Regalo</th><th>Stock</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Últimos movimientos</h2>
+    <table id="movs-table">
+      <thead><tr><th>Fecha</th><th>Comercial</th><th>Cliente</th><th>Regalo</th><th>Cantidad</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+<script>
+const SUPABASE_URL = "https://bxhzwnshjnlfyfyijxmu.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4aHp3bnNoam5sZnlmeWlqeG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDQ2MzIsImV4cCI6MjA3MTEyMDYzMn0.ym5nzk5NL_qBdFxvK6_AFcQArMrhW4YIljMpWBCupIY";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const $giftSelect   = document.getElementById('gift');
+const $stockTBody   = document.querySelector('#stock-table tbody');
+const $movsTBody    = document.querySelector('#movs-table tbody');
+const $form         = document.getElementById('gift-form');
+const $msg          = document.getElementById('msg');
+
+function showMsg(text, ok=true){
+  $msg.textContent = text;
+  $msg.className = ok ? 'ok' : 'err';
+  setTimeout(()=>{$msg.textContent=''; $msg.className='small';}, 4000);
+}
+
+async function loadGifts(){
+  const { data, error } = await sb.from('gifts').select('id,name,stock').order('name');
+  if(error){ console.error(error); showMsg('Error cargando regalos', false); return; }
+  // select
+  $giftSelect.innerHTML = data.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+  // tabla stock
+  $stockTBody.innerHTML = data.map(g => `<tr><td>${g.name}</td><td>${g.stock}</td></tr>`).join('');
+}
+
+async function loadMovements(limit=20){
+  const { data, error } = await sb
+    .from('movements')
+    .select('created_at, qty, gifts(name), clients(name), commercials(name)')
+    .order('created_at', { ascending:false })
+    .limit(limit);
+  if(error){ console.error(error); return; }
+  $movsTBody.innerHTML = (data||[]).map(m => `
+    <tr>
+      <td>${new Date(m.created_at).toLocaleString()}</td>
+      <td>${m.commercials?.name ?? ''}</td>
+      <td>${m.clients?.name ?? ''}</td>
+      <td>${m.gifts?.name ?? ''}</td>
+      <td>${m.qty}</td>
+    </tr>
+  `).join('');
+}
+
+$form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const commercial = document.getElementById('commercial').value.trim();
+  const client     = document.getElementById('client').value.trim();
+  const giftId     = parseInt(document.getElementById('gift').value,10);
+  const qty        = parseInt(document.getElementById('qty').value,10);
+
+  if(!commercial || !client || !giftId || !qty || qty<=0){
+    showMsg('Completá todos los campos correctamente', false);
+    return;
+  }
+
+  // Llamamos a la función transaccional
+  const { data, error } = await sb.rpc('register_movement', {
+    p_commercial: commercial,
+    p_client: client,
+    p_gift_id: giftId,
+    p_qty: qty
+  });
+
+  if(error){
+    console.error(error);
+    showMsg(error.message || 'Error registrando entrega', false);
+  } else {
+    showMsg('Entrega registrada. Nuevo stock: ' + (data?.[0]?.new_stock ?? ''));
+    await loadGifts();
+    await loadMovements();
+    $form.reset();
+    document.getElementById('qty').value = 1;
+  }
+});
+
+(async function init(){
+  await loadGifts();
+  await loadMovements();
+})();
+</script>
+</body>
+</html>
