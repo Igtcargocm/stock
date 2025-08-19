@@ -3,33 +3,34 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Stock de Regalos</title>
+<title>IGT Cargo · Stock</title>
 <link rel="preconnect" href="https://unpkg.com">
 <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
   :root{
     --bg:#f5f8ff; --card:#ffffff; --primary:#2b6cb0; --primary-600:#2c5282;
-    --text:#0f172a; --muted:#6b7280; --border:#e6eaf5; --ok:#0a7a42; --err:#b00020;
+    --text:#0f172a; --muted:#667085; --border:#e6eaf5; --ok:#0a7a42; --err:#b00020;
     --radius:14px; --shadow:0 10px 25px rgba(43,108,176,.12);
   }
   *{box-sizing:border-box}
   body{margin:0;background:linear-gradient(180deg,#eaf1ff 0%,#f7f9ff 100%);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  .wrap{max-width:1000px;margin:40px auto;padding:0 18px}
-  .nav{
-    display:flex; justify-content:center; gap:8px; background:transparent; margin-bottom:22px; flex-wrap:wrap;
-  }
-  .nav a{
-    text-decoration:none; color:#fff; background:var(--primary);
-    padding:10px 16px; border-radius:999px; font-weight:700; box-shadow:var(--shadow);
-    transition:transform .05s ease, background .2s ease;
-  }
-  .nav a.secondary{background:var(--primary-600)}
-  .nav a.active{outline:3px solid rgba(43,108,176,.25)}
-  .nav a:active{transform:scale(.98)}
-  header{
-    text-align:center; margin-bottom:14px;
-  }
-  header h1{margin:8px 0 6px; font-size:28px}
+  .wrap{max-width:1100px;margin:28px auto;padding:0 18px}
+
+  /* NAVBAR */
+  .navbar{position:sticky; top:0; z-index:50; background:rgba(43,108,176,.96); backdrop-filter:saturate(180%) blur(8px); color:#fff; box-shadow:0 6px 18px rgba(43,108,176,.25)}
+  .nav-inner{max-width:1100px; margin:0 auto; padding:10px 16px; display:flex; align-items:center; gap:16px}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px}
+  .brand img{height:28px; width:auto; display:block; filter:drop-shadow(0 1px 3px rgba(0,0,0,.2))}
+  .brand span{opacity:.95}
+  .nav-tabs{margin-left:auto; display:flex; gap:8px; align-items:center}
+  .nav-tabs a{color:#fff; text-decoration:none; font-weight:700; padding:8px 14px; border-radius:999px; opacity:.85}
+  .nav-tabs a:hover{opacity:1; background:rgba(255,255,255,.12)}
+  .nav-tabs a.active{background:#fff; color:var(--primary-600)}
+  .admin-state{margin-left:8px; font-size:12px; background:rgba(255,255,255,.15); padding:4px 10px; border-radius:999px}
+
+  /* HEAD + CARDS */
+  header{ text-align:center; margin:16px 0 10px;}
+  header h1{margin:10px 0 6px; font-size:28px}
   header p{margin:0;color:var(--muted)}
   .card{
     background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
@@ -37,42 +38,51 @@
   }
   .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
   .grid-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px}
-  @media (max-width:840px){ .grid-2,.grid-3{grid-template-columns:1fr} }
+  @media (max-width:900px){ .grid-2,.grid-3{grid-template-columns:1fr} }
   label{display:block; font-weight:600; margin:8px 0 6px}
   input, select, button{
     width:100%; padding:12px 12px; border:1px solid var(--border); border-radius:12px; background:#fff;
     font-size:15px;
   }
-  button{
-    cursor:pointer; background:var(--primary); color:#fff; font-weight:700; border:none;
-  }
+  button{cursor:pointer; background:var(--primary); color:#fff; font-weight:700; border:none}
   button.ghost{background:#f1f5ff; color:var(--primary); border:1px solid #d7e3ff}
+  button.warn{background:#b42318}
   .actions{display:flex; gap:10px; align-items:center}
   .center{display:flex; justify-content:center; align-items:center}
   .msg{margin-top:8px; font-weight:700}
   .ok{color:var(--ok)} .err{color:var(--err)} .muted{color:var(--muted)}
   table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:10px; border:1px solid var(--border)}
   thead th{background:#f4f7ff; text-align:left; padding:12px; font-size:14px}
-  tbody td{border-top:1px solid var(--border); padding:10px 12px}
-  .tag{display:inline-block; padding:4px 10px; background:#e9f1ff; color:var(--primary-600); border-radius:999px; font-weight:700; font-size:12px}
-  .section-title{display:flex; justify-content:space-between; align-items:center; gap:12px; margin:0 0 8px}
-  .hidden{display:none}
+  tbody td{border-top:1px solid var(--border); padding:10px 12px; vertical-align:middle}
   .small{font-size:13px;color:var(--muted)}
+  .hidden{display:none}
+  .section-title{display:flex; justify-content:space-between; align-items:center; gap:12px; margin:0 0 8px}
+
+  /* tiny helpers */
+  .pill{display:inline-block; padding:4px 10px; background:#e9f1ff; color:var(--primary-600); border-radius:999px; font-weight:700; font-size:12px}
 </style>
 </head>
 <body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="brand">
+        <img src="logo.png" alt="IGT">
+        <span>IGT Cargo · Stock</span>
+      </div>
+      <div class="nav-tabs">
+        <a href="#" id="tab-comercial" class="active" aria-current="page">Comercial</a>
+        <a href="#" id="tab-admin">Admin</a>
+        <span class="admin-state" id="admin-state">Admin: bloqueado</span>
+      </div>
+    </div>
+  </nav>
+
   <div class="wrap">
     <header>
-      <div class="tag">IGT Cargo · Stock</div>
       <h1>Stock de Regalos</h1>
       <p>Registra entregas y administra stock desde una sola página.</p>
     </header>
-
-    <!-- NAV -->
-    <nav class="nav">
-      <a href="#" id="tab-comercial" class="active" aria-current="page">Comercial</a>
-      <a href="#" id="tab-admin" class="secondary">Admin</a>
-    </nav>
 
     <!-- COMERCIAL -->
     <section id="view-comercial">
@@ -86,7 +96,7 @@
             <div>
               <label for="f_commercial">Comercial</label>
               <select id="f_commercial" required></select>
-              <div class="small">Elegí tu nombre (se carga desde “Admin → Comerciales”).</div>
+              <div class="small">Elegí tu nombre.</div>
             </div>
             <div>
               <label for="f_client">Cliente</label>
@@ -132,57 +142,105 @@
 
     <!-- ADMIN -->
     <section id="view-admin" class="hidden">
-      <!-- Comerciales -->
-      <div class="card">
+      <!-- LOGIN -->
+      <div id="admin-login" class="card">
         <div class="section-title">
-          <h2 style="margin:0">Comerciales</h2>
-          <span class="small">Agregar comerciales para que aparezcan en el selector de “Comercial”.</span>
+          <h2 style="margin:0">Acceso Admin</h2>
+          <span class="small">Usuario: <b>admin</b> · Contraseña: <b>admin</b></span>
         </div>
-        <form id="form-add-commercial" class="grid-2">
+        <form id="form-login" class="grid-3">
           <div>
-            <label for="a_commercial_name">Nombre del comercial</label>
-            <input id="a_commercial_name" placeholder="Ej: Juan Pérez" required />
+            <label for="login-user">Usuario</label>
+            <input id="login-user" required />
+          </div>
+          <div>
+            <label for="login-pass">Contraseña</label>
+            <input id="login-pass" type="password" required />
           </div>
           <div class="center">
-            <button type="submit">Agregar/Actualizar</button>
+            <div class="actions" style="width:100%">
+              <button type="submit">Entrar</button>
+              <button type="button" class="ghost" id="btn-cancel-login">Cancelar</button>
+            </div>
           </div>
         </form>
-        <div style="margin-top:10px">
-          <table id="tbl-commercials">
-            <thead><tr><th>Comercial</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div id="msg-admin-com" class="msg"></div>
+        <div id="login-msg" class="msg"></div>
       </div>
 
-      <!-- Regalos -->
-      <div class="card">
-        <div class="section-title">
-          <h2 style="margin:0">Regalos y stock</h2>
-          <span class="small">Crear regalos o ajustar stock sin entrar a la base.</span>
+      <!-- CONTENIDO ADMIN -->
+      <div id="admin-content" class="hidden">
+        <!-- barra estado -->
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span class="pill">Admin activo</span>
+            <span class="small" style="margin-left:8px">Gestiona comerciales, regalos y límites.</span>
+          </div>
+          <button id="btn-logout" class="ghost">Salir</button>
         </div>
-        <form id="form-add-gift" class="grid-3">
-          <div>
-            <label for="a_gift_name">Nombre del regalo</label>
-            <input id="a_gift_name" placeholder="Ej: Mate" required />
-          </div>
-          <div>
-            <label for="a_gift_stock">Stock (opcional)</label>
-            <input id="a_gift_stock" type="number" min="0" step="1" placeholder="Ej: 50" />
-          </div>
-          <div class="center">
-            <button type="submit">Guardar regalo</button>
-          </div>
-        </form>
 
-        <div style="margin-top:10px">
-          <table id="tbl-gifts-admin">
-            <thead><tr><th>Regalo</th><th>Stock</th><th style="width:260px">Ajustar stock</th></tr></thead>
-            <tbody></tbody>
-          </table>
+        <!-- Comerciales -->
+        <div class="card">
+          <div class="section-title">
+            <h2 style="margin:0">Comerciales</h2>
+            <span class="small">Agregar/Eliminar comerciales. También podés fijar límite diario.</span>
+          </div>
+          <form id="form-add-commercial" class="grid-3">
+            <div>
+              <label for="a_commercial_name">Nombre del comercial</label>
+              <input id="a_commercial_name" placeholder="Ej: Juan Pérez" required />
+            </div>
+            <div>
+              <label for="a_commercial_limit">Límite diario (opcional)</label>
+              <input id="a_commercial_limit" type="number" min="1" step="1" placeholder="Ej: 20" />
+            </div>
+            <div class="center">
+              <div class="actions" style="width:100%">
+                <button type="submit">Guardar</button>
+                <button type="button" class="ghost" id="btn-refresh-com">Actualizar</button>
+              </div>
+            </div>
+          </form>
+
+          <div style="margin-top:10px">
+            <table id="tbl-commercials">
+              <thead><tr><th>Comercial</th><th>Límite diario</th><th style="width:180px">Acciones</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="msg-admin-com" class="msg"></div>
         </div>
-        <div id="msg-admin-gift" class="msg"></div>
+
+        <!-- Regalos -->
+        <div class="card">
+          <div class="section-title">
+            <h2 style="margin:0">Regalos y stock</h2>
+            <span class="small">Crear regalos, ajustar stock o eliminar (si no tienen movimientos).</span>
+          </div>
+          <form id="form-add-gift" class="grid-3">
+            <div>
+              <label for="a_gift_name">Nombre del regalo</label>
+              <input id="a_gift_name" placeholder="Ej: Mate" required />
+            </div>
+            <div>
+              <label for="a_gift_stock">Stock (opcional)</label>
+              <input id="a_gift_stock" type="number" min="0" step="1" placeholder="Ej: 50" />
+            </div>
+            <div class="center">
+              <div class="actions" style="width:100%">
+                <button type="submit">Guardar regalo</button>
+                <button type="button" class="ghost" id="btn-refresh-gift">Actualizar</button>
+              </div>
+            </div>
+          </form>
+
+          <div style="margin-top:10px">
+            <table id="tbl-gifts-admin">
+              <thead><tr><th>Regalo</th><th>Stock</th><th style="width:260px">Ajustar stock</th><th style="width:120px">Eliminar</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div id="msg-admin-gift" class="msg"></div>
+        </div>
       </div>
     </section>
   </div>
@@ -195,30 +253,73 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 // ======== Helpers UI ========
 const $ = (q) => document.querySelector(q);
 const $$ = (q) => Array.from(document.querySelectorAll(q));
-
 function toast(target, text, ok=true){
   target.textContent = text;
   target.className = 'msg ' + (ok ? 'ok' : 'err');
   setTimeout(()=>{ target.textContent=''; target.className='msg'; }, 3500);
 }
 
-// ======== NAV ========
-const vCom = $('#view-comercial');
-const vAdm = $('#view-admin');
-$('#tab-comercial').addEventListener('click', (e)=>{ e.preventDefault(); vCom.classList.remove('hidden'); vAdm.classList.add('hidden'); $('#tab-comercial').classList.add('active'); $('#tab-admin').classList.remove('active'); });
-$('#tab-admin').addEventListener('click', (e)=>{ e.preventDefault(); vAdm.classList.remove('hidden'); vCom.classList.add('hidden'); $('#tab-admin').classList.add('active'); $('#tab-comercial').classList.remove('active'); });
+// ======== NAV + LOGIN ========
+let adminLogged = false;
+
+function showComercial(){
+  $('#view-comercial').classList.remove('hidden');
+  $('#view-admin').classList.add('hidden');
+  $('#tab-comercial').classList.add('active');
+  $('#tab-admin').classList.remove('active');
+}
+
+function showAdmin(){
+  $('#view-comercial').classList.add('hidden');
+  $('#view-admin').classList.remove('hidden');
+  $('#tab-admin').classList.add('active');
+  $('#tab-comercial').classList.remove('active');
+
+  if(!adminLogged){
+    $('#admin-login').classList.remove('hidden');
+    $('#admin-content').classList.add('hidden');
+    $('#admin-state').textContent = "Admin: bloqueado";
+  } else {
+    $('#admin-login').classList.add('hidden');
+    $('#admin-content').classList.remove('hidden');
+    $('#admin-state').textContent = "Admin: activo";
+  }
+}
+
+$('#tab-comercial').addEventListener('click', (e)=>{ e.preventDefault(); showComercial(); });
+$('#tab-admin').addEventListener('click', (e)=>{ e.preventDefault(); showAdmin(); });
+
+$('#form-login').addEventListener('submit',(e)=>{
+  e.preventDefault();
+  const u = $('#login-user').value.trim();
+  const p = $('#login-pass').value.trim();
+  if(u==="admin" && p==="admin"){
+    adminLogged = true;
+    $('#login-user').value = '';
+    $('#login-pass').value = '';
+    toast($('#login-msg'), 'Acceso concedido');
+    showAdmin();
+  } else {
+    toast($('#login-msg'), 'Usuario o contraseña inválidos', false);
+  }
+});
+$('#btn-cancel-login').addEventListener('click', ()=> showComercial());
+$('#btn-logout').addEventListener('click', ()=>{
+  adminLogged = false;
+  showAdmin();
+});
 
 // ======== COMERCIAL: cargar selects, stock, movimientos ========
 async function loadGifts(){
   const { data, error } = await sb.from('gifts').select('id,name,stock').order('name');
   if(error) { console.error(error); return; }
-  // select
+  // select de Comercial
   const sel = $('#f_gift');
   sel.innerHTML = data.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
-  // tabla stock
+  // tabla stock (Comercial)
   const tb = $('#tbl-stock tbody');
   tb.innerHTML = data.map(g => `<tr><td>${g.name}</td><td>${g.stock}</td></tr>`).join('');
-  // admin table
+  // tabla Admin
   const tbA = $('#tbl-gifts-admin tbody');
   tbA.innerHTML = data.map(g => `
     <tr>
@@ -230,11 +331,13 @@ async function loadGifts(){
           <button type="button" data-gid="${g.id}" class="btn-set-stock">Aplicar</button>
         </div>
       </td>
+      <td><button type="button" class="warn btn-del-gift" data-gid="${g.id}">Eliminar</button></td>
     </tr>
   `).join('');
-  // wire up buttons
+  // wire up acciones admin
   $$('.btn-set-stock').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
+      if(!adminLogged){ toast($('#msg-admin-gift'), 'Solo Admin', false); return; }
       const gid = parseInt(btn.dataset.gid,10);
       const val = parseInt((document.getElementById('set_'+gid).value||'').trim(),10);
       if(Number.isNaN(val) || val < 0){ toast($('#msg-admin-gift'),'Stock inválido', false); return; }
@@ -244,17 +347,71 @@ async function loadGifts(){
       await loadGifts();
     });
   });
+  $$('.btn-del-gift').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!adminLogged){ toast($('#msg-admin-gift'), 'Solo Admin', false); return; }
+      const gid = parseInt(btn.dataset.gid,10);
+      if(!confirm('¿Eliminar este regalo? Solo si no tiene movimientos.')) return;
+      const { error } = await sb.rpc('delete_gift', { p_id: gid });
+      if(error){ console.error(error); toast($('#msg-admin-gift'), error.message || 'No se pudo eliminar', false); return; }
+      toast($('#msg-admin-gift'), 'Regalo eliminado');
+      await loadGifts();
+    });
+  });
 }
 
 async function loadCommercials(){
-  const { data, error } = await sb.from('commercials').select('id,name').order('name');
+  const { data, error } = await sb
+    .from('commercials')
+    .select('id,name, commercial_limits(daily_limit)')
+    .order('name');
   if(error) { console.error(error); return; }
+
   // selector Comercial
   const sel = $('#f_commercial');
   sel.innerHTML = data.map(c => `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`).join('');
   // tabla Admin
   const tb = $('#tbl-commercials tbody');
-  tb.innerHTML = data.map(c => `<tr><td>${c.name}</td></tr>`).join('');
+  tb.innerHTML = data.map(c => `
+    <tr>
+      <td>${c.name}</td>
+      <td>${c.commercial_limits?.[0]?.daily_limit ?? '-'}</td>
+      <td>
+        <div class="actions">
+          <input type="number" min="1" step="1" id="lim_${c.id}" placeholder="Nuevo límite" style="max-width:120px">
+          <button type="button" class="btn-set-limit" data-cid="${c.id}">Aplicar</button>
+          <button type="button" class="warn btn-del-commercial" data-cid="${c.id}">Eliminar</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  // wire admin acciones
+  $$('.btn-set-limit').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!adminLogged){ toast($('#msg-admin-com'), 'Solo Admin', false); return; }
+      const cid = parseInt(btn.dataset.cid,10);
+      const valStr = (document.getElementById('lim_'+cid).value||'').trim();
+      const val = valStr === '' ? null : parseInt(valStr,10);
+      if(val !== null && (Number.isNaN(val) || val <= 0)){ toast($('#msg-admin-com'),'Límite inválido', false); return; }
+      const { error } = await sb.rpc('set_commercial_limit', { p_commercial_id: cid, p_daily_limit: val });
+      if(error){ console.error(error); toast($('#msg-admin-com'), error.message || 'No se pudo aplicar', false); return; }
+      toast($('#msg-admin-com'),'Límite actualizado');
+      await loadCommercials();
+    });
+  });
+
+  $$('.btn-del-commercial').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!adminLogged){ toast($('#msg-admin-com'), 'Solo Admin', false); return; }
+      const cid = parseInt(btn.dataset.cid,10);
+      if(!confirm('¿Eliminar comercial? Solo si no tiene movimientos.')) return;
+      const { error } = await sb.rpc('delete_commercial', { p_id: cid });
+      if(error){ console.error(error); toast($('#msg-admin-com'), error.message || 'No se pudo eliminar', false); return; }
+      toast($('#msg-admin-com'),'Comercial eliminado');
+      await Promise.all([loadCommercials(), loadMovements()]);
+    });
+  });
 }
 
 async function loadMovements(limit=20){
@@ -286,7 +443,7 @@ $('#form-movement').addEventListener('submit', async (e)=>{
   if(!commercialName || !client || !giftId || !qty || qty<=0){
     toast($('#msg-mov'), 'Completá los campos correctamente', false); return;
   }
-  const { data, error } = await sb.rpc('register_movement', {
+  const { error } = await sb.rpc('register_movement', {
     p_commercial: commercialName,
     p_client: client,
     p_gift_id: giftId,
@@ -295,38 +452,52 @@ $('#form-movement').addEventListener('submit', async (e)=>{
   if(error){ console.error(error); toast($('#msg-mov'), error.message || 'Error al registrar', false); return; }
   toast($('#msg-mov'), 'Entrega registrada');
   $('#f_client').value=''; $('#f_qty').value='1';
-  await loadGifts(); await loadMovements();
-});
-
-$('#btn-refresh').addEventListener('click', async ()=>{
-  await Promise.all([loadGifts(), loadCommercials(), loadMovements()]);
+  await Promise.all([loadGifts(), loadMovements()]);
 });
 
 // ======== ADMIN: upserts ========
 $('#form-add-commercial').addEventListener('submit', async (e)=>{
   e.preventDefault();
+  if(!adminLogged){ toast($('#msg-admin-com'),'Solo Admin', false); return; }
   const name = $('#a_commercial_name').value.trim();
+  const limitStr = $('#a_commercial_limit').value.trim();
+  const limitVal = limitStr === '' ? null : parseInt(limitStr,10);
   if(!name){ toast($('#msg-admin-com'),'Ingresá un nombre', false); return; }
-  const { data, error } = await sb.rpc('upsert_commercial', { p_name: name });
-  if(error){ console.error(error); toast($('#msg-admin-com'), error.message || 'Error guardando', false); return; }
+  if(limitVal !== null && (Number.isNaN(limitVal) || limitVal <= 0)){ toast($('#msg-admin-com'),'Límite inválido', false); return; }
+
+  // upsert comercial
+  const { data: idData, error: upErr } = await sb.rpc('upsert_commercial', { p_name: name });
+  if(upErr){ console.error(upErr); toast($('#msg-admin-com'), upErr.message || 'Error guardando', false); return; }
+
+  // set límite (si corresponde)
+  if(limitVal !== null){
+    const { error: limErr } = await sb.rpc('set_commercial_limit', { p_commercial_id: idData, p_daily_limit: limitVal });
+    if(limErr){ console.error(limErr); toast($('#msg-admin-com'), limErr.message || 'No se pudo aplicar el límite', false); }
+  }
   toast($('#msg-admin-com'), 'Comercial guardado');
-  $('#a_commercial_name').value='';
+  $('#a_commercial_name').value=''; $('#a_commercial_limit').value='';
   await loadCommercials();
 });
 
 $('#form-add-gift').addEventListener('submit', async (e)=>{
   e.preventDefault();
+  if(!adminLogged){ toast($('#msg-admin-gift'),'Solo Admin', false); return; }
   const name = $('#a_gift_name').value.trim();
   const stockStr = $('#a_gift_stock').value.trim();
   const stockVal = stockStr === '' ? null : parseInt(stockStr,10);
   if(!name){ toast($('#msg-admin-gift'),'Ingresá un nombre', false); return; }
   if(stockVal !== null && (Number.isNaN(stockVal) || stockVal < 0)){ toast($('#msg-admin-gift'),'Stock inválido', false); return; }
-  const { data, error } = await sb.rpc('upsert_gift', { p_name: name, p_stock: stockVal });
+  const { error } = await sb.rpc('upsert_gift', { p_name: name, p_stock: stockVal });
   if(error){ console.error(error); toast($('#msg-admin-gift'), error.message || 'Error guardando', false); return; }
   toast($('#msg-admin-gift'), 'Regalo guardado');
   $('#a_gift_name').value=''; $('#a_gift_stock').value='';
   await loadGifts();
 });
+
+// botones refresh
+$('#btn-refresh').addEventListener('click', async ()=>{ await Promise.all([loadGifts(), loadCommercials(), loadMovements()]); });
+$('#btn-refresh-com').addEventListener('click', async ()=>{ await loadCommercials(); });
+$('#btn-refresh-gift').addEventListener('click', async ()=>{ await loadGifts(); });
 
 // ======== INIT ========
 (async function init(){
