@@ -1,154 +1,361 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Stock de Regalos</title>
-  <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:24px;max-width:960px}
-    h1{margin-top:0}
-    form, .card{border:1px solid #ddd; padding:16px; border-radius:12px; margin:16px 0; box-shadow:0 2px 6px rgba(0,0,0,.05)}
-    label{display:block; font-weight:600; margin:8px 0 4px}
-    input, select, button{width:100%; padding:10px; border:1px solid #ccc; border-radius:10px; box-sizing:border-box}
-    button{cursor:pointer; font-weight:700}
-    .row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
-    .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px}
-    table{width:100%; border-collapse:collapse}
-    th, td{border-bottom:1px solid #eee; padding:8px; text-align:left}
-    .ok{color:#0a7a42; font-weight:700}
-    .err{color:#b00020; font-weight:700}
-    .small{font-size:.9em; color:#555}
-  </style>
+  <title>Stock | Regalos</title>
+  <link rel="preconnect" href="https://unpkg.com">
   <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <style>
+    :root{
+      --bg:#f6f9ff;
+      --card:#ffffff;
+      --primary:#0d47a1;
+      --primary-600:#0b3c8a;
+      --accent:#1976d2;
+      --text:#0f172a;
+      --muted:#64748b;
+      --ring:rgba(25,118,210,.25);
+      --border:#e5ecff;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#f1f6ff 0%, #f7fbff 100%);color:var(--text);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
+    .wrap{max-width:1000px;margin:40px auto;padding:0 16px}
+    /* Nav */
+    .nav{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:10px 12px;box-shadow:0 10px 30px rgba(13,71,161,.07)}
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1e88e5,#64b5f6)}
+    .title{font-weight:800;letter-spacing:.2px;color:var(--primary)}
+    .tabs{display:flex;gap:6px;background:#f0f6ff;border:1px solid var(--border);padding:4px;border-radius:12px}
+    .tab{appearance:none;border:0;background:transparent;padding:10px 14px;border-radius:10px;color:var(--primary);font-weight:700;cursor:pointer}
+    .tab.active{background:white;box-shadow:0 2px 10px rgba(13,71,161,.15);color:#0a2e78}
+    /* Cards */
+    .grid{display:grid;gap:16px}
+    @media(min-width:860px){.grid-2{grid-template-columns:1fr 1fr}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 10px 30px rgba(13,71,161,.05)}
+    .card h2{margin:0 0 10px;font-size:18px}
+    .muted{color:var(--muted);font-size:.92rem}
+    /* Form */
+    label{font-weight:700;font-size:.92rem;margin:10px 0 6px;display:block}
+    input,select,button{width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:12px;background:white;font-size:14px}
+    input:focus,select:focus{outline:none;box-shadow:0 0 0 4px var(--ring);border-color:var(--accent)}
+    .row{display:grid;gap:12px}
+    .row-2{grid-template-columns:1fr 1fr}
+    .row-3{grid-template-columns:1fr 1fr 1fr}
+    .btn{background:var(--primary);color:#fff;border:none;font-weight:800;cursor:pointer}
+    .btn:hover{background:var(--primary-600)}
+    .btn-outline{background:#eff6ff;color:var(--primary);border:1px solid #cfe2ff;font-weight:800}
+    .btn-outline:hover{background:#e6f0ff}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:#eef5ff;border:1px solid #dce8ff;color:#0b3c8a;font-weight:700}
+    /* Tables */
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #edf2ff}
+    th{text-align:left;font-size:.85rem;color:#0b3c8a;letter-spacing:.3px}
+    .right{text-align:right}
+    .center{text-align:center}
+    .small{font-size:.9rem}
+    /* Sections */
+    .hidden{display:none}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .badge-ok{color:#0a7a42;font-weight:800}
+    .badge-err{color:#b00020;font-weight:800}
+  </style>
 </head>
 <body>
-  <h1>Stock de Regalos</h1>
+  <div class="wrap">
+    <!-- NAV -->
+    <div class="nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="title">Stock de Regalos</div>
+      </div>
+      <div class="tabs">
+        <button id="tab-comercial" class="tab active">Comercial</button>
+        <button id="tab-admin" class="tab">Admin</button>
+      </div>
+    </div>
 
-  <div class="card">
-    <div class="small">Completá el formulario para registrar una entrega. El stock se descuenta en forma automática.</div>
-    <form id="gift-form">
-      <div class="row3">
-        <div>
-          <label for="commercial">Comercial</label>
-          <input id="commercial" name="commercial" placeholder="Nombre del comercial" required />
+    <!-- CONTENIDO -->
+    <div id="section-comercial" class="grid" style="margin-top:16px">
+      <div class="card">
+        <h2>Registrar entrega</h2>
+        <p class="muted">Completá el formulario. El stock se descuenta automáticamente.</p>
+        <form id="form-entrega" class="grid">
+          <div class="row row-3">
+            <div>
+              <label for="commercial">Comercial</label>
+              <select id="commercial" required></select>
+            </div>
+            <div>
+              <label for="client">Cliente</label>
+              <input id="client" placeholder="Nombre del cliente" required/>
+            </div>
+            <div>
+              <label for="gift">Regalo</label>
+              <select id="gift" required></select>
+            </div>
+          </div>
+          <div class="row row-2">
+            <div>
+              <label for="qty">Cantidad</label>
+              <input id="qty" type="number" min="1" step="1" value="1" required/>
+            </div>
+            <div style="align-self:end">
+              <button class="btn" type="submit">Registrar</button>
+            </div>
+          </div>
+          <div id="msg-com" class="small"></div>
+        </form>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Stock</h2>
+          <table id="tbl-stock">
+            <thead><tr><th>Regalo</th><th class="right">Stock</th></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
-        <div>
-          <label for="client">Cliente</label>
-          <input id="client" name="client" placeholder="Nombre del cliente" required />
-        </div>
-        <div>
-          <label for="gift">Regalo</label>
-          <select id="gift" name="gift" required></select>
+        <div class="card">
+          <h2>Últimos movimientos</h2>
+          <table id="tbl-movs">
+            <thead><tr><th>Fecha</th><th>Comercial</th><th>Cliente</th><th>Regalo</th><th class="right">Cant.</th></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
-      <div class="row">
-        <div>
-          <label for="qty">Cantidad</label>
-          <input id="qty" name="qty" type="number" min="1" step="1" value="1" required />
+    </div>
+
+    <!-- ADMIN -->
+    <div id="section-admin" class="grid hidden" style="margin-top:16px">
+      <div class="card">
+        <h2>Comerciales</h2>
+        <div class="row row-2" style="margin-bottom:10px">
+          <input id="new-commercial-name" placeholder="Nombre del comercial"/>
+          <button id="btn-add-commercial" class="btn">Agregar</button>
         </div>
-        <div style="align-self:end">
-          <button type="submit">Registrar entrega</button>
-        </div>
+        <table id="tbl-commercials">
+          <thead><tr><th>Nombre</th><th class="center">Acciones</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="msg-admin-com" class="small"></div>
       </div>
-      <div id="msg" class="small"></div>
-    </form>
-  </div>
 
-  <div class="card">
-    <h2>Stock</h2>
-    <table id="stock-table">
-      <thead><tr><th>Regalo</th><th>Stock</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
+      <div class="card">
+        <h2>Regalos y Stock</h2>
+        <div class="row row-3" style="margin-bottom:10px">
+          <input id="new-gift-name" placeholder="Nombre del regalo"/>
+          <input id="new-gift-stock" type="number" min="0" step="1" placeholder="Stock inicial"/>
+          <button id="btn-add-gift" class="btn">Agregar regalo</button>
+        </div>
+        <table id="tbl-gifts-admin">
+          <thead><tr><th>Regalo</th><th class="right">Stock</th><th class="center">Acciones</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div id="msg-admin-gift" class="small"></div>
+      </div>
 
-  <div class="card">
-    <h2>Últimos movimientos</h2>
-    <table id="movs-table">
-      <thead><tr><th>Fecha</th><th>Comercial</th><th>Cliente</th><th>Regalo</th><th>Cantidad</th></tr></thead>
-      <tbody></tbody>
-    </table>
+      <div class="card" style="background: #f9fbff">
+        <span class="pill">ℹ️ Zona Admin</span>
+        <p class="muted" style="margin-top:10px">Para usar esta sección con el sitio público, configurá políticas RLS seguras o Auth. Abajo te dejo un SQL rápido para pruebas.</p>
+      </div>
+    </div>
   </div>
 
 <script>
+/* ========= SUPABASE ========= */
 const SUPABASE_URL = "https://bxhzwnshjnlfyfyijxmu.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4aHp3bnNoam5sZnlmeWlqeG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NDQ2MzIsImV4cCI6MjA3MTEyMDYzMn0.ym5nzk5NL_qBdFxvK6_AFcQArMrhW4YIljMpWBCupIY";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-const $giftSelect   = document.getElementById('gift');
-const $stockTBody   = document.querySelector('#stock-table tbody');
-const $movsTBody    = document.querySelector('#movs-table tbody');
-const $form         = document.getElementById('gift-form');
-const $msg          = document.getElementById('msg');
+/* ========= UI HELPERS ========= */
+function $(q){ return document.querySelector(q); }
+function el(tag, attrs={}, html=''){ const e = document.createElement(tag); Object.assign(e, attrs); if(html) e.innerHTML=html; return e; }
+function showMsg(node, text, ok=true){ node.textContent = text; node.className = ok ? 'small badge-ok' : 'small badge-err'; setTimeout(()=>{ node.textContent=''; node.className='small'; }, 3000); }
 
-function showMsg(text, ok=true){
-  $msg.textContent = text;
-  $msg.className = ok ? 'ok' : 'err';
-  setTimeout(()=>{$msg.textContent=''; $msg.className='small';}, 4000);
-}
+/* ========= TABS ========= */
+const tabCom = $("#tab-comercial"), tabAdm = $("#tab-admin");
+const secCom = $("#section-comercial"), secAdm = $("#section-admin");
+tabCom.addEventListener('click', ()=>{ tabCom.classList.add('active'); tabAdm.classList.remove('active'); secCom.classList.remove('hidden'); secAdm.classList.add('hidden'); });
+tabAdm.addEventListener('click', ()=>{ tabAdm.classList.add('active'); tabCom.classList.remove('active'); secAdm.classList.remove('hidden'); secCom.classList.add('hidden'); });
+
+/* ========= CARGA INICIAL ========= */
+const $selGift = $("#gift");
+const $selCommercial = $("#commercial");
+const $tblStock = $("#tbl-stock tbody");
+const $tblMovs  = $("#tbl-movs tbody");
+const $msgCom   = $("#msg-com");
 
 async function loadGifts(){
   const { data, error } = await sb.from('gifts').select('id,name,stock').order('name');
-  if(error){ console.error(error); showMsg('Error cargando regalos', false); return; }
-  // select
-  $giftSelect.innerHTML = data.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
-  // tabla stock
-  $stockTBody.innerHTML = data.map(g => `<tr><td>${g.name}</td><td>${g.stock}</td></tr>`).join('');
+  if(error){ console.error(error); showMsg($msgCom, 'Error cargando regalos', false); return; }
+  // Selects
+  $selGift.innerHTML = data.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  // Stock tabla
+  $tblStock.innerHTML = data.map(g=>`<tr><td>${g.name}</td><td class="right">${g.stock}</td></tr>`).join('');
+  // Admin tabla
+  renderGiftsAdmin(data);
+}
+
+async function loadCommercials(){
+  const { data, error } = await sb.from('commercials').select('id,name').order('name');
+  if(error){ console.error(error); return; }
+  $selCommercial.innerHTML = data.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  renderCommercialsAdmin(data);
 }
 
 async function loadMovements(limit=20){
   const { data, error } = await sb
     .from('movements')
     .select('created_at, qty, gifts(name), clients(name), commercials(name)')
-    .order('created_at', { ascending:false })
-    .limit(limit);
+    .order('created_at', { ascending:false }).limit(limit);
   if(error){ console.error(error); return; }
-  $movsTBody.innerHTML = (data||[]).map(m => `
+  $tblMovs.innerHTML = (data||[]).map(m=>`
     <tr>
       <td>${new Date(m.created_at).toLocaleString()}</td>
       <td>${m.commercials?.name ?? ''}</td>
       <td>${m.clients?.name ?? ''}</td>
       <td>${m.gifts?.name ?? ''}</td>
-      <td>${m.qty}</td>
-    </tr>
-  `).join('');
+      <td class="right">${m.qty}</td>
+    </tr>`).join('');
 }
 
-$form.addEventListener('submit', async (e)=>{
+/* ========= REGISTRAR ENTREGA (RPC) ========= */
+$("#form-entrega").addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const commercial = document.getElementById('commercial').value.trim();
-  const client     = document.getElementById('client').value.trim();
-  const giftId     = parseInt(document.getElementById('gift').value,10);
-  const qty        = parseInt(document.getElementById('qty').value,10);
-
+  const commercial = $selCommercial.value || '';
+  const client = $("#client").value.trim();
+  const giftId = parseInt($selGift.value,10);
+  const qty = parseInt($("#qty").value,10);
   if(!commercial || !client || !giftId || !qty || qty<=0){
-    showMsg('Completá todos los campos correctamente', false);
-    return;
+    showMsg($msgCom,'Completá todos los campos', false); return;
   }
-
-  // Llamamos a la función transaccional
   const { data, error } = await sb.rpc('register_movement', {
     p_commercial: commercial,
     p_client: client,
     p_gift_id: giftId,
     p_qty: qty
   });
-
-  if(error){
-    console.error(error);
-    showMsg(error.message || 'Error registrando entrega', false);
-  } else {
-    showMsg('Entrega registrada. Nuevo stock: ' + (data?.[0]?.new_stock ?? ''));
-    await loadGifts();
-    await loadMovements();
-    $form.reset();
-    document.getElementById('qty').value = 1;
-  }
+  if(error){ console.error(error); showMsg($msgCom, error.message || 'Error registrando', false); return; }
+  showMsg($msgCom, 'Entrega registrada. Nuevo stock: ' + (data?.[0]?.new_stock ?? ''));
+  $("#form-entrega").reset(); $("#qty").value = 1;
+  await Promise.all([loadGifts(), loadMovements()]);
 });
 
-(async function init(){
+/* ========= ADMIN: COMERCIALES ========= */
+const $tblComm = $("#tbl-commercials tbody");
+const $msgAdminCom = $("#msg-admin-com");
+
+function renderCommercialsAdmin(items){
+  $tblComm.innerHTML = items.map(c=>`
+    <tr>
+      <td>${c.name}</td>
+      <td class="center">
+        <div class="actions">
+          <button class="btn-outline" data-del-comm="${c.id}">Eliminar</button>
+        </div>
+      </td>
+    </tr>`).join('');
+  // bind delete
+  $tblComm.querySelectorAll('[data-del-comm]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = parseInt(btn.getAttribute('data-del-comm'),10);
+      const sure = confirm('¿Eliminar comercial? (no afecta movimientos históricos)');
+      if(!sure) return;
+      const { error } = await sb.from('commercials').delete().eq('id', id);
+      if(error){ console.error(error); showMsg($msgAdminCom, 'No se pudo eliminar', false); return; }
+      showMsg($msgAdminCom, 'Comercial eliminado');
+      await loadCommercials();
+    });
+  });
+}
+
+$("#btn-add-commercial").addEventListener('click', async ()=>{
+  const name = $("#new-commercial-name").value.trim();
+  if(!name){ showMsg($msgAdminCom, 'Ingresá un nombre', false); return; }
+  // upsert por nombre
+  const { error } = await sb.from('commercials')
+    .upsert({ name }, { onConflict: 'name' });
+  if(error){ console.error(error); showMsg($msgAdminCom, 'Error al guardar', false); return; }
+  $("#new-commercial-name").value='';
+  showMsg($msgAdminCom, 'Comercial guardado');
+  await loadCommercials();
+});
+
+/* ========= ADMIN: REGALOS ========= */
+const $tblGiftsAdmin = $("#tbl-gifts-admin tbody");
+const $msgAdminGift = $("#msg-admin-gift");
+
+function renderGiftsAdmin(items){
+  $tblGiftsAdmin.innerHTML = items.map(g=>`
+    <tr>
+      <td>${g.name}</td>
+      <td class="right">
+        <input type="number" min="0" step="1" value="${g.stock}" style="width:120px" data-stock-input="${g.id}"/>
+      </td>
+      <td class="center">
+        <div class="actions">
+          <button class="btn-outline" data-inc="${g.id}">+1</button>
+          <button class="btn-outline" data-dec="${g.id}">-1</button>
+          <button class="btn" data-save="${g.id}">Guardar</button>
+          <button class="btn-outline" data-del-gift="${g.id}">Eliminar</button>
+        </div>
+      </td>
+    </tr>`).join('');
+  // binds
+  $tblGiftsAdmin.querySelectorAll('[data-inc]').forEach(b=>{
+    b.addEventListener('click', ()=> adjustInlineStock(b.getAttribute('data-inc'), +1));
+  });
+  $tblGiftsAdmin.querySelectorAll('[data-dec]').forEach(b=>{
+    b.addEventListener('click', ()=> adjustInlineStock(b.getAttribute('data-dec'), -1));
+  });
+  $tblGiftsAdmin.querySelectorAll('[data-save]').forEach(b=>{
+    b.addEventListener('click', ()=> saveStock(b.getAttribute('data-save')));
+  });
+  $tblGiftsAdmin.querySelectorAll('[data-del-gift]').forEach(b=>{
+    b.addEventListener('click', ()=> deleteGift(b.getAttribute('data-del-gift')));
+  });
+}
+function getStockInput(id){ return $tblGiftsAdmin.querySelector(`[data-stock-input="${id}"]`); }
+
+function adjustInlineStock(id, delta){
+  const inp = getStockInput(id);
+  const v = Math.max(0, parseInt(inp.value||'0',10) + delta);
+  inp.value = v;
+}
+async function saveStock(id){
+  const inp = getStockInput(id);
+  const v = Math.max(0, parseInt(inp.value||'0',10));
+  const { error } = await sb.from('gifts').update({ stock: v }).eq('id', id);
+  if(error){ console.error(error); showMsg($msgAdminGift,'No se pudo actualizar',false); return; }
+  showMsg($msgAdminGift,'Stock actualizado');
   await loadGifts();
-  await loadMovements();
+}
+async function deleteGift(id){
+  const sure = confirm('¿Eliminar regalo? (si tiene movimientos, no podrás borrarlo por FK)');
+  if(!sure) return;
+  const { error } = await sb.from('gifts').delete().eq('id', id);
+  if(error){ console.error(error); showMsg($msgAdminGift,'No se pudo eliminar',false); return; }
+  showMsg($msgAdminGift,'Regalo eliminado');
+  await loadGifts();
+}
+
+$("#btn-add-gift").addEventListener('click', async ()=>{
+  const name = $("#new-gift-name").value.trim();
+  const stock = parseInt($("#new-gift-stock").value||'0',10);
+  if(!name){ showMsg($msgAdminGift,'Ingresá nombre',false); return; }
+  const { error } = await sb.from('gifts')
+    .upsert({ name, stock: Math.max(0, stock) }, { onConflict: 'name' });
+  if(error){ console.error(error); showMsg($msgAdminGift,'Error al guardar',false); return; }
+  $("#new-gift-name").value=''; $("#new-gift-stock").value='';
+  showMsg($msgAdminGift,'Regalo guardado');
+  await loadGifts();
+});
+
+/* ========= INIT ========= */
+(async function init(){
+  await Promise.all([loadGifts(), loadCommercials(), loadMovements()]);
 })();
 </script>
 </body>
